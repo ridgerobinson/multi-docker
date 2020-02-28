@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - doccker
+
+before_install:
+    - docker build -t ridgerobinson/react-test -f ./client/Dockerfile.dev ./client
+
+scripts:
+    - docker run -e CI=true ridgerobinson/react-test npm test
+
+after_success:
+    - docker build -t ridgerobinson/multi-client ./client
+    - docker build -t ridgerobinson/multi-nginx ./nginx
+    - docker build -t ridgerobinson/multi-server ./server
+    - docker build -t ridgerobinson/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take those image and push them to docker hub
+    - docker push ridgerobinson/multi-client
+    - docker push ridgerobinson/multi-nginx
+    - docker push ridgerobinson/multi-server
+    - docker push ridgerobinson/multi-worker
